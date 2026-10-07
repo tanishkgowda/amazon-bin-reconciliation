@@ -1,0 +1,14 @@
+# data and large artifacts (download with src/download_data.py instead)
+data/*
+!data/.gitkeep
+data_synth/
+models/*.pt
+!models/.gitkeep
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+.DS_Store
+.gradio/
+flagged/
