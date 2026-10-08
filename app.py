@@ -23,7 +23,7 @@ def build_ui(predictor, examples, threshold):
         probs = predictor.predict(img)
         rec = None if recorded is None or recorded == "" else int(recorded)
         r = reconcile(probs, rec, threshold)
-        md = (f"<h2 style='color:{COLORS[r['status']]}'>{r['status']}</h2>"
+        md = (f"<h2 style='color:{COLORS[r['status']]}'>{r['status']}</h2>\n\n"
               f"**Predicted items:** {r['predicted']}  (confidence {r['confidence']:.2f})  \n"
               f"**Expected count (probability-weighted):** {r['expected_count']:.2f}  \n")
         if "message" in r:
