@@ -100,14 +100,23 @@ def conclusions(df, d):
         out.append(s)
     pc = {int(k): v for k, v in d["per_class_accuracy"].items() if v is not None}
     if pc:
+        best_k, worst_k = max(pc, key=pc.get), min(pc, key=pc.get)
         out.append("Per-class test accuracy: " + ", ".join(f"{k} items {pct(v)}" for k, v in sorted(pc.items())) +
-                   ". Accuracy falls as the count rises, and most errors are off by one, typically occluded or stacked items.")
+                   f". Bins with {best_k} items are easiest and bins with {worst_k} items hardest; middle counts can be "
+                   f"confused with neighbours on both sides, and {pct(d.get('off_by_one_accuracy'))} of predictions are "
+                   f"within one item of the truth.")
     r = d.get("reconciliation")
     if r:
         out.append(f"For reconciliation, flagging a bin when P(count = recorded) &lt; {r['threshold']} gives ROC-AUC "
                    f"<b>{r['roc_auc']:.3f}</b>, precision {pct(r['precision'])} and recall {pct(r['recall'])} on simulated "
-                   f"records with 50% errors. A raw count accuracy near the paper's level is therefore usable as an "
-                   f"audit-prioritisation tool rather than a fully automatic check.")
+                   f"records with 50% errors. At this threshold the flag fires on most bins, because the model is rarely more "
+                   f"than 50% confident in a single count, so the probability is best used to rank bins for audit rather "
+                   f"than as an automatic yes/no check.")
+    out.append("All CNNs were trained on 14K images, 7-18x fewer than the paper's 105K-260K, which explains most of the "
+               "gap to its 54-56%: training accuracy kept rising while validation accuracy plateaued, a sign of too little "
+               "data. The CNN variants lie within a few points of each other, close to the noise level of a 2,001-image "
+               "test set, and the best run changed optimiser, schedule and class weights together, so its gain cannot be "
+               "attributed to a single factor.")
     return out
 
 
@@ -135,7 +144,7 @@ def build(out_pdf):
         "The public <b>Amazon Bin Image Dataset</b> (AWS Open Data, about 535K bin photos) pairs each JPEG with a JSON "
         "whose EXPECTED_QUANTITY field is our label. Following the paper, we keep bins with at most 5 items, giving a "
         "6-class problem with a 16.7% random baseline. Our downloader samples random bins from the public S3 bucket "
-        "(default 20,000 usable images, resized to 256x256), and we use a stratified 70/20/10 train/validation/test "
+        "(20,000 usable images, resized to 256x256), and we use a stratified 70/20/10 train/validation/test "
         "split. The classes are imbalanced (empty bins are rare), photos vary in lighting, and many items are hidden "
         "behind the elastic tape that holds them in place, so some labels cannot be verified even by a human.", B))
 
@@ -153,7 +162,7 @@ def build(out_pdf):
         "backbone frozen so the randomly initialised head does not damage pretrained features, then (2) full fine-tuning "
         "with discriminative learning rates (lr/9 for early layers, lr/3 for middle layers, lr for the head). We compare "
         "SGD with step decay (the paper's baseline), SGD with warm restarts (SGDR), and AdamW with a one-cycle schedule, "
-        "with the initial learning rate set by a learning-rate range test. Augmentation is kept mild (horizontal flip, "
+        "with learning rates of 0.01 (SGD) and 1e-3 (AdamW) and a learning-rate range test as a sanity check. Augmentation is kept mild (horizontal flip, "
         "small affine shift, colour jitter), because aggressive crops could cut an item out and silently change the "
         "label. We use optional inverse-frequency class weights, mixed precision, early stopping on validation accuracy, "
         "and flip test-time augmentation.", B))

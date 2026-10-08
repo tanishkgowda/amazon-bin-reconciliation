@@ -33,7 +33,7 @@ DEFAULT_EXPERIMENTS = [
 ]
 
 
-def build(model, use_pca, n_pca, class_weight):
+def build(model, use_pca, n_pca, class_weight, svm_max_iter=200000):
     steps = [("scale", StandardScaler())]
     if use_pca:
         steps.append(("pca", PCA(n_components=n_pca, svd_solver="randomized", random_state=SEED)))
@@ -45,7 +45,9 @@ def build(model, use_pca, n_pca, class_weight):
     elif model == "svm_linear":
         clf, grid = LinearSVC(dual="auto", max_iter=5000, class_weight=class_weight), {"clf__C": [0.0001, 0.001, 0.01, 0.1]}
     elif model == "svm_rbf":
-        clf = SVC(kernel="rbf", class_weight=class_weight, cache_size=1000)
+        # max_iter caps libsvm on heavily overlapping, low-dimensional features (e.g. blob stats),
+        # where a large C can otherwise run for hours without converging.
+        clf = SVC(kernel="rbf", class_weight=class_weight, cache_size=1000, max_iter=svm_max_iter)
         grid = {"clf__C": [1, 10, 100], "clf__gamma": ["scale", 0.1, 0.01]}
         if use_pca:  # gamma must shrink with dimensionality
             grid["clf__gamma"] = ["scale", 1.0 / (10 * n_pca), 1.0 / (100 * n_pca)]
@@ -70,6 +72,9 @@ def main(argv=None):
     p.add_argument("--cv", type=int, default=5)
     p.add_argument("--class-weight", choices=["none", "balanced"], default="balanced")
     p.add_argument("--n-jobs", type=int, default=-1)
+    p.add_argument("--svm-max-iter", type=int, default=200000, help="iteration cap for RBF SVM fits")
+    p.add_argument("--overwrite", action="store_true",
+                   help="re-run experiments already in --out (default: skip them, i.e. resume)")
     p.add_argument("--out", default=str(RESULTS_DIR / "classical_results.json"))
     p.add_argument("--fig-dir", default=str(FIG_DIR))
     args = p.parse_args(argv)
@@ -85,14 +90,23 @@ def main(argv=None):
     print(f"train {len(tr)} | val {len(va)} | test {len(te)}")
     cw = None if args.class_weight == "none" else "balanced"
 
+    import os
     results = []
+    if os.path.exists(args.out) and not args.overwrite:
+        results = json.load(open(args.out))
+        print(f"Resuming: {len(results)} finished experiments found in {args.out}")
+    done = {(r["feature"], r["model"]) for r in results}
     for exp in args.experiments:
         feat, model = exp.split(":")
+        if (feat, model) in done:
+            print(f"skip {exp} (already in {args.out})")
+            continue
         t0 = time.time()
+        print(f"running {exp} ...", flush=True)
         Xtr, Xva, Xte = (load_feature_set(d, paths, feat, args.size, args.n_jobs) for d in (tr, va, te))
         use_pca = feat == "raw"
         n_pca = min(args.pca, Xtr.shape[1], len(Xtr) - 1)
-        pipe, grid = build(model, use_pca, n_pca, cw)
+        pipe, grid = build(model, use_pca, n_pca, cw, args.svm_max_iter)
         cv = StratifiedKFold(n_splits=args.cv, shuffle=True, random_state=SEED)
         gs = GridSearchCV(pipe, grid, cv=cv, scoring="accuracy", n_jobs=args.n_jobs)
         gs.fit(Xtr, tr["quantity"].values)
@@ -110,10 +124,9 @@ def main(argv=None):
         results.append(entry)
         print(f"{entry['name']:<32} cv={entry['cv_accuracy']:.3f} val={entry['val']['accuracy']:.3f} "
               f"test={entry['test']['accuracy']:.3f} rmse={entry['test']['rmse']:.3f} "
-              f"params={entry['best_params']} ({entry['seconds']}s)")
-
-    with open(args.out, "w") as f:
-        json.dump(results, f, indent=2, default=str)
+              f"params={entry['best_params']} ({entry['seconds']}s)", flush=True)
+        with open(args.out, "w") as f:  # save after every experiment so an interrupt loses nothing
+            json.dump(results, f, indent=2, default=str)
     best = max(results, key=lambda r: r["val"]["accuracy"])
     plot_confusion(best["test"]["confusion_matrix"], f"{args.fig_dir}/cm_classical_best.png",
                    title=f"Best classical: {best['name']}")

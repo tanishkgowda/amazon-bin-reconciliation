@@ -1,0 +1,106 @@
+{
+  "n": 2001,
+  "accuracy": 0.4447776111944028,
+  "off_by_one_accuracy": 0.8380809595202399,
+  "rmse": 1.1094523683877282,
+  "mae": 0.7541229385307346,
+  "macro_f1": 0.5336284684627395,
+  "per_class_accuracy": {
+    "0": 0.9824561403508771,
+    "1": 0.8355555555555556,
+    "2": 0.5667447306791569,
+    "3": 0.22924901185770752,
+    "4": 0.378076062639821,
+    "5": 0.35103244837758113
+  },
+  "confusion_matrix": [
+    [
+      56,
+      1,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      2,
+      188,
+      22,
+      6,
+      6,
+      1
+    ],
+    [
+      0,
+      76,
+      242,
+      56,
+      40,
+      13
+    ],
+    [
+      0,
+      34,
+      161,
+      116,
+      147,
+      48
+    ],
+    [
+      0,
+      5,
+      81,
+      88,
+      169,
+      104
+    ],
+    [
+      0,
+      4,
+      40,
+      46,
+      130,
+      119
+    ]
+  ],
+  "rmse_expected_count": 0.9272316337061387,
+  "reconciliation": {
+    "mismatch_rate": 0.5,
+    "roc_auc": 0.7265441423296408,
+    "threshold": 0.5,
+    "precision": 0.568025078369906,
+    "recall": 0.8988095238095238,
+    "flag_rate": 0.7971014492753623
+  },
+  "run": "resnet34_adamw_onecycle_cw",
+  "arch": "resnet34",
+  "split": "test",
+  "tta": true,
+  "loss": 1.3140967253266067,
+  "best_val_acc_during_training": 0.45475,
+  "train_args": {
+    "data_dir": null,
+    "arch": "resnet34",
+    "img_size": 224,
+    "epochs": 12,
+    "warmup_epochs": 1,
+    "batch_size": 64,
+    "optimizer": "adamw",
+    "scheduler": "onecycle",
+    "sgdr_t0": 1,
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "no_discriminative": false,
+    "class_weights": true,
+    "label_smoothing": 0.0,
+    "patience": 4,
+    "max_train": null,
+    "num_workers": 2,
+    "no_amp": false,
+    "no_pretrained": false,
+    "device": "auto",
+    "run_name": "resnet34_adamw_onecycle_cw",
+    "lr_find": false,
+    "seed": 42
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "n": 2001,
+  "accuracy": 0.4237881059470265,
+  "off_by_one_accuracy": 0.8390804597701149,
+  "rmse": 1.0917435816051368,
+  "mae": 0.7631184407796102,
+  "macro_f1": 0.5049716504189469,
+  "per_class_accuracy": {
+    "0": 0.8947368421052632,
+    "1": 0.6311111111111111,
+    "2": 0.4964871194379391,
+    "3": 0.45849802371541504,
+    "4": 0.16554809843400448,
+    "5": 0.40412979351032446
+  },
+  "confusion_matrix": [
+    [
+      51,
+      6,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      6,
+      142,
+      62,
+      12,
+      1,
+      2
+    ],
+    [
+      0,
+      45,
+      212,
+      142,
+      13,
+      15
+    ],
+    [
+      0,
+      9,
+      142,
+      232,
+      57,
+      66
+    ],
+    [
+      0,
+      1,
+      65,
+      189,
+      74,
+      118
+    ],
+    [
+      0,
+      1,
+      29,
+      108,
+      64,
+      137
+    ]
+  ],
+  "rmse_expected_count": 0.9310531097631227,
+  "reconciliation": {
+    "mismatch_rate": 0.5,
+    "roc_auc": 0.7051033824070078,
+    "threshold": 0.5,
+    "precision": 0.5600976205003051,
+    "recall": 0.9107142857142857,
+    "flag_rate": 0.8190904547726137
+  },
+  "run": "resnet34_sgd_sgdr",
+  "arch": "resnet34",
+  "split": "test",
+  "tta": true,
+  "loss": 1.3158922066752878,
+  "best_val_acc_during_training": 0.42375,
+  "train_args": {
+    "data_dir": null,
+    "arch": "resnet34",
+    "img_size": 224,
+    "epochs": 12,
+    "warmup_epochs": 1,
+    "batch_size": 64,
+    "optimizer": "sgd",
+    "scheduler": "sgdr",
+    "sgdr_t0": 1,
+    "lr": 0.01,
+    "weight_decay": 0.0001,
+    "no_discriminative": false,
+    "class_weights": false,
+    "label_smoothing": 0.0,
+    "patience": 4,
+    "max_train": null,
+    "num_workers": 2,
+    "no_amp": false,
+    "no_pretrained": false,
+    "device": "auto",
+    "run_name": "resnet34_sgd_sgdr",
+    "lr_find": false,
+    "seed": 42
+  }
+}
